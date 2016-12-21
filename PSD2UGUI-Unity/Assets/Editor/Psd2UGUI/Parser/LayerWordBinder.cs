@@ -180,8 +180,26 @@ namespace subjectnerdagreement.psdexport
         private static void importScrollView(string s, GameObject mainObj)
         {
             ScrollRect scrollview = swapComponent<ScrollRect>(mainObj);
-            scrollview.viewport = findChildComponent<RectTransform>(mainObj, "viewport");
-            scrollview.content = findChildComponent<RectTransform>(mainObj, "viewport/content");
+
+            GameObject viewportGObj = CreateUIObject("viewport", mainObj);
+            // Make viewport fill entire scroll view.
+            RectTransform viewportRT = viewportGObj.GetComponent<RectTransform>();
+            viewportRT.anchorMin = Vector2.zero;
+            viewportRT.anchorMax = Vector2.one;
+            viewportRT.sizeDelta = Vector2.zero;
+            viewportRT.pivot = Vector2.up;
+
+            GameObject contentGObj = CreateUIObject("content", viewportGObj);
+            // Make context match viewpoprt width and be somewhat taller.
+            // This will show the vertical scrollbar and not the horizontal one.
+            RectTransform contentRT = contentGObj.GetComponent<RectTransform>();
+            contentRT.anchorMin = Vector2.up;
+            contentRT.anchorMax = Vector2.one;
+            contentRT.sizeDelta = new Vector2(0, 300);
+            contentRT.pivot = Vector2.up;
+
+            scrollview.viewport = viewportRT;
+            scrollview.content = contentRT;
 
             Scrollbar hbar = findChildComponent<Scrollbar>(mainObj, "hbar");
             if (hbar != null)
