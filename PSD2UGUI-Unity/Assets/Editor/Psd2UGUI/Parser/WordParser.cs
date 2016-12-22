@@ -130,7 +130,7 @@ namespace subjectnerdagreement.psdexport
             return new []
             {
                 layerName,
-                PsdSetting.Instance.GetAssetFolder("default")
+                PsdSetting.Instance.DefaultImportPath
             };
         }
 

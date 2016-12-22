@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.IO;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -22,8 +23,11 @@ namespace subjectnerdagreement.psdexport
 	public class PsdSetting : ScriptableObject
 	{
 		private const string DEFAULT_IMPORT_PATH = "UI";
+	    private const string SETTING_PATH = "Assets/PSD/Resources/psdsetting.asset";
 
 		public string PsdPath = "";
+
+
 		public string DefaultImportPath
 		{
 			get
@@ -51,13 +55,12 @@ namespace subjectnerdagreement.psdexport
 					if (_instance == null)
 					{
 						_instance = PsdSetting.CreateInstance<PsdSetting>();
-						AssetDatabase.CreateAsset(_instance, "Assets/PSD/Resources/psdsetting.asset");
+					    string dirPath = Path.GetDirectoryName(SETTING_PATH);
+					    if (!Directory.Exists(dirPath))
+					        Directory.CreateDirectory(dirPath);
+						AssetDatabase.CreateAsset(_instance, SETTING_PATH);
 					}
 #endif
-				    if (_instance.assetDirArr.Length == 0 || _instance.assetDirArr[0].key != "default")
-				    {
-                        _instance.insertAssetMapFirst( "default",String.Empty);
-                    }
 				}
 
 				return _instance;

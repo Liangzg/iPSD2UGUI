@@ -20,21 +20,21 @@ namespace subjectnerdagreement.psdexport
 		{
 			serializedObject.Update();
 
-			EditorGUILayout.BeginHorizontal();
+//			EditorGUILayout.BeginHorizontal();
 
-			if (GUILayout.Button("Psd Path"))
-			{
-                string savePath = EditorUtility.SaveFolderPanel("Default psd file path", m_PsdSetting.PsdPath, string.Empty);
-			    m_PsdSetting.PsdPath = savePath.Substring(Application.dataPath.Length + 1);
-			}
-			m_PsdSetting.PsdPath = GUILayout.TextArea(m_PsdSetting.PsdPath);
+//			if (GUILayout.Button("Psd Path"))
+//			{
+//                string savePath = EditorUtility.SaveFolderPanel("Default psd file path", m_PsdSetting.PsdPath, string.Empty);
+//			    m_PsdSetting.PsdPath = savePath.Substring(Application.dataPath.Length + 1);
+//			}
+//			m_PsdSetting.PsdPath = GUILayout.TextArea(m_PsdSetting.PsdPath);
 
-			EditorGUILayout.EndHorizontal();
+//			EditorGUILayout.EndHorizontal();
 
 			EditorGUILayout.BeginHorizontal();
 
 			SerializedProperty defaultImportPath = serializedObject.FindProperty("m_DefaultImportPath");
-			if (GUILayout.Button("Default Import Path"))
+			if (GUILayout.Button("Default Import" , GUILayout.MaxWidth(100)))
 			{
 				var path = EditorUtility.SaveFolderPanel("Default import path", 
 					Path.Combine(Application.dataPath, m_PsdSetting.DefaultImportPath), string.Empty);
@@ -74,7 +74,7 @@ namespace subjectnerdagreement.psdexport
                         folderProperty.stringValue = savePath.Substring(Application.dataPath.Length + 1);
                 }
 
-                if (i != 0 && GUILayout.Button("X", GUILayout.Width(25)))
+                if (GUILayout.Button("X", GUILayout.Width(25)))
                     rmList.Add(i);
                 GUILayout.EndHorizontal();
 		    }

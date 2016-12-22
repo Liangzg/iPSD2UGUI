@@ -32,7 +32,7 @@ namespace PhotoshopFile.Text
 			uint color = 0;
 			for (int i = 0; i < 4; ++i)
 			{
-				color = color * 256 + (uint)((double)values[i] * 255);
+				color = color * 256 + (uint)((double)values[i] * 255 + 0.5f);
 			}
 			return color;
 		}

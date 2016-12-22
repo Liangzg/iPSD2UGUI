@@ -168,11 +168,17 @@ namespace subjectnerdagreement.psdexport
 						fontStyle |= FontStyle.Italic;
 					}
 
-					float a = ((layerText.FillColor | 0xFF000000U) >> 24) / 255f;
-					float r = ((layerText.FillColor | 0xFF0000U) >> 16) / 255f;
-					float g = ((layerText.FillColor | 0xFF00U) >> 8) / 255f;
-					float b = (layerText.FillColor | 0xFFU) / 255f;
+					float a = ((layerText.FillColor & 0xFF000000U) >> 24) / 255f;
+					float r = ((layerText.FillColor & 0xFF0000U) >> 16) / 255f;
+					float g = ((layerText.FillColor & 0xFF00U) >> 8) / 255f;
+					float b = (layerText.FillColor & 0xFFU) / 255f;
 					text.color = new Color(r, g, b, a);
+
+//				    if (layerText.OutlineWidth > 0)
+//				    {
+//				        Outline outline = spriteObject.AddComponent<Outline>();
+//                        outline.effectDistance = new Vector2((float)layerText.OutlineWidth , (float)layerText.OutlineWidth);
+//				    }
 				}
 				else
 				{
