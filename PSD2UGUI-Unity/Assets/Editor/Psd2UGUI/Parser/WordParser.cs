@@ -40,13 +40,15 @@ namespace subjectnerdagreement.psdexport
         public static void BindingParse(GameObject context)
         {
             List<Word> words = ParseLayerName(context.name);
-
+            string newName = getGameObjectName(words);
+            if(!string.IsNullOrEmpty(newName))
+                context.name = newName;
             //解析绑定组件和参数
             foreach (Word word in words)
             {
                 if(word.TypeAndParams == null)  continue;
 
-                context.name = words[0].Context;
+                
                 foreach (string key in word.TypeAndParams.Keys)
                 {
                     Action<string, GameObject> import = null;
@@ -158,6 +160,10 @@ namespace subjectnerdagreement.psdexport
             foreach (string param in args)
             {
                 string[] paramInfo = param.Split(':');
+                if (paramInfo.Length < 2)
+                {
+                    throw new Exception("Cant identify params ! arg is " + param);
+                }
                 word.TypeAndParams[paramInfo[0]] = paramInfo[1];
             }
         }
@@ -173,6 +179,22 @@ namespace subjectnerdagreement.psdexport
             string[] componentAndParams = subStr.Split(':');
             word.TypeAndParams = new Dictionary<string, string>();
             word.TypeAndParams["component"] = componentAndParams[0];
+        }
+
+
+        private static string getGameObjectName(List<Word> words)
+        {
+            if (words.Count == 0)
+            {
+                return string.Empty;
+            }
+            string newName = words[0].Context;
+            if (newName.IndexOfAny(new[] {'[', ']'}) >= 0)
+            {
+                newName = newName.Replace("[", "").Replace("]", "");
+                newName = newName.Split(':')[1];
+            }
+            return newName;
         }
     }
 

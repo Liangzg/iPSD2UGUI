@@ -37,12 +37,33 @@ namespace subjectnerdagreement.psdexport
 				return m_DefaultImportPath;
 			}
 		}
+
+
+	    public string DefaultFontPath
+	    {
+	        get { return "Assets/" + defaultFont; }
+	    }
+
 		[SerializeField]
 		protected string m_DefaultImportPath;
         
 	    public AssetDir[] assetDirArr;
-          
-		private static PsdSetting _instance = null;
+
+        #region ------------默认的文本字体--------------------
+        /// <summary>
+        /// 默认文本的字符大小
+        /// </summary>
+        [SerializeField]
+	    public int DefaultTextSize = 20;
+        /// <summary>
+        /// 默认字体
+        /// </summary>
+        [SerializeField]
+	    public string defaultFont;
+
+        #endregion
+
+        private static PsdSetting _instance = null;
 		public static PsdSetting Instance
 		{
 			get
@@ -85,7 +106,7 @@ namespace subjectnerdagreement.psdexport
 	                return assetDir.folder;
 	            }
 	        }
-	        return assetDirArr[0].folder;
+	        return DefaultImportPath;
 	    }
 
 

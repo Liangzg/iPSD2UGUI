@@ -98,7 +98,39 @@ namespace subjectnerdagreement.psdexport
 		        folderProperty.stringValue = "";
 		    }
 
+
+            this.textSetting();
+
             serializedObject.ApplyModifiedProperties();
 		}
+
+        /// <summary>
+        /// 文本设置
+        /// </summary>
+	    private void textSetting()
+	    {
+            EditorGUILayout.Foldout(true, "Text Setting");
+
+//            GUILayout.BeginHorizontal();
+//            SerializedProperty defaultTextSize = serializedObject.FindProperty("DefaultTextSize");
+//            GUILayout.Label("Text Size" , GUILayout.MaxWidth(100));
+//            string newSize = GUILayout.TextField(Convert.ToString(defaultTextSize.intValue));
+//            defaultTextSize.intValue = Convert.ToInt32(string.IsNullOrEmpty(newSize) ? "20" : newSize);
+//            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            SerializedProperty defaultFont = serializedObject.FindProperty("defaultFont");
+            if (GUILayout.Button("Font" , GUILayout.MaxWidth(100)))
+            {
+                string path = EditorUtility.OpenFilePanel("select file",
+                                    Path.Combine(Application.dataPath, defaultFont.stringValue),
+                                    string.Empty);
+                var startLen = Mathf.Min(Application.dataPath.Length + 1, path.Length);
+                defaultFont.stringValue = path.Substring(startLen);
+            }
+            GUILayout.TextField(defaultFont.stringValue);
+            GUILayout.EndHorizontal();
+        }
+
 	}
 }

@@ -238,6 +238,7 @@ namespace subjectnerdagreement.psdexport
 			styleIsSetup = true;
 		}
 
+	    private PSDLayerGroupInfo rootGroup;
 		private Dictionary<PSDLayerGroupInfo, Rect> groupRects;
 		#endregion
 
@@ -481,9 +482,8 @@ namespace subjectnerdagreement.psdexport
 			int groupOpenMask = 1;
 
 			PsdFile psd = settings.Psd;
-
-			// Loop backwards through the layers to display them in the expected order
-			for (int i = psd.Layers.Count - 1; i >= 0; i--)
+            // Loop backwards through the layers to display them in the expected order
+            for (int i = psd.Layers.Count - 1; i >= 0; i--)
 			{
 				Layer layer = psd.Layers[i];
 
@@ -579,7 +579,7 @@ namespace subjectnerdagreement.psdexport
 				else
 				{
 					DrawLayerEntry(layer, i, groupDepth, parentVisible);
-				}
+                }
 
 				GUI.enabled = true;
 
@@ -639,17 +639,19 @@ namespace subjectnerdagreement.psdexport
 
 			fileInfo.LayerVisibility[layerIndex] = visToggle;
 
-			// If layer visible, show layer export settings
-			var layerSetting = settings.layerSettings[layerIndex];
-			layerSetting.doExport = visToggle && parentVisible;
-			if (layerSetting.doExport)
-			{
-				layerSetting.scaleBy = (PSDExporter.ScaleDown)EditorGUILayout.EnumPopup(layerSetting.scaleBy,
-																			GUILayout.Width(colSize));
-				layerSetting.pivot = (SpriteAlignment)EditorGUILayout.EnumPopup(layerSetting.pivot,
-																			GUILayout.Width(colPivot));
-				settings.layerSettings[layerIndex] = layerSetting;
-			}
+            // If layer visible, show layer export settings
+            if (settings.layerSettings.ContainsKey(layerIndex)) {
+			    var layerSetting = settings.layerSettings[layerIndex];
+			    layerSetting.doExport = visToggle && parentVisible;
+			    if (layerSetting.doExport)
+			    {
+				    layerSetting.scaleBy = (PSDExporter.ScaleDown)EditorGUILayout.EnumPopup(layerSetting.scaleBy,
+																			    GUILayout.Width(colSize));
+				    layerSetting.pivot = (SpriteAlignment)EditorGUILayout.EnumPopup(layerSetting.pivot,
+																			    GUILayout.Width(colPivot));
+				    settings.layerSettings[layerIndex] = layerSetting;
+			    }
+            }
 
 			EditorGUILayout.EndHorizontal();
 
@@ -849,69 +851,72 @@ namespace subjectnerdagreement.psdexport
 			bool createUiImgs = false;
             bool createAllUI = false;
 
-			EditorGUIUtility.labelWidth = labelWidth;
-			using (new EditorGUILayout.HorizontalScope())
-			{
-				if (selectedGroup == null)
-					GUI.enabled = false;
-
-				const float buttonHeight = 50f;
-
-				using (new EditorGUILayout.VerticalScope())
-				{
-					GUILayout.Label("2D Sprites", styleHeader);
-					createSprites = GUILayout.Button("Create 2D Sprites",
-													GUILayout.Height(buttonHeight),
-													GUILayout.ExpandHeight(false));
-				}
-
-				using (new EditorGUILayout.VerticalScope())
-				{
-					bool selectionOk = Selection.activeGameObject != null;
-					string btnText = "Select UI Root";
-					if (selectionOk)
-					{
-						selectionOk = uiConstructor.CanBuild(Selection.activeGameObject);
-						if (selectionOk)
-							btnText = "Create UI Images";
-					}
-
-					GUI.enabled = selectionOk && selectedGroup != null;
-
-					GUILayout.Label("UI Images", styleHeader);
-					createUiImgs = GUILayout.Button(btnText,
-													GUILayout.Height(buttonHeight),
-													GUILayout.ExpandHeight(false));
-				}
-				GUI.enabled = true;
-			}
+//			EditorGUIUtility.labelWidth = labelWidth;
+//			using (new EditorGUILayout.HorizontalScope())
+//			{
+//				if (selectedGroup == null)
+//					GUI.enabled = false;
+//
+//				const float buttonHeight = 50f;
+//
+//				using (new EditorGUILayout.VerticalScope())
+//				{
+//					GUILayout.Label("2D Sprites", styleHeader);
+//					createSprites = GUILayout.Button("Create 2D Sprites",
+//													GUILayout.Height(buttonHeight),
+//													GUILayout.ExpandHeight(false));
+//				}
+//
+//				using (new EditorGUILayout.VerticalScope())
+//				{
+//					bool selectionOk = Selection.activeGameObject != null;
+//					string btnText = "Select UI Root";
+//					if (selectionOk)
+//					{
+//						selectionOk = uiConstructor.CanBuild(Selection.activeGameObject);
+//						if (selectionOk)
+//							btnText = "Create UI Images";
+//					}
+//
+//					GUI.enabled = selectionOk && selectedGroup != null;
+//
+//					GUILayout.Label("UI Images", styleHeader);
+//					createUiImgs = GUILayout.Button(btnText,
+//													GUILayout.Height(buttonHeight),
+//													GUILayout.ExpandHeight(false));
+//				}
+//				GUI.enabled = true;
+//			}
 
 
             using (new EditorGUILayout.VerticalScope())
             {
                 bool selectionOk = Selection.activeGameObject != null;
-                string btnText = "Select UI Root";
+                string btnText = "Select Build Root";
                 if (selectionOk)
                 {
                     selectionOk = uiConstructor.CanBuild(Selection.activeGameObject);
                     if (selectionOk)
-                        btnText = "Create UI";
+                        btnText = "Create UI Panel";
                 }
 
-//                GUI.enabled = selectionOk && selectedGroup != null;
-
-                //GUILayout.Label("UI Images", styleHeader);
                 createAllUI = GUILayout.Button(btnText,
                                                 GUILayout.Height(30),
                                                 GUILayout.ExpandHeight(false));
+
+                GUILayout.Space(5);
             }
 
             if (createSprites)
 				PsdBuilder.BuildPsd(Selection.activeGameObject, selectedGroup, settings, fileInfo, createAlign, spriteConstructor);
 			if (createUiImgs)
 				PsdBuilder.BuildPsd(Selection.activeGameObject, selectedGroup, settings, fileInfo, createAlign, uiConstructor);
-            if (createAllUI)
-                PsdBuilder.BuildPsd(Selection.activeGameObject, groupRects.Keys.ToArray(), settings, fileInfo, createAlign, uiConstructor);
+		    if (createAllUI)
+		    {
+		        GameObject root = PsdBuilder.BuildPsdRoot(Selection.activeGameObject, settings, fileInfo, createAlign, uiConstructor);
+		        Selection.activeGameObject = root;
+		    }
+                
 
             DrawCreateExtensions();
 		}

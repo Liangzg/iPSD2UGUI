@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -83,6 +84,7 @@ namespace subjectnerdagreement.psdexport
             {
                 text.alignment = holderText.alignment;
                 text.fontSize = holderText.fontSize - 1;
+                text.font = holderText.font;
             }
 
             RectTransform textRectTransform = textObj.GetComponent<RectTransform>();
@@ -180,6 +182,13 @@ namespace subjectnerdagreement.psdexport
         private static void importScrollView(string s, GameObject mainObj)
         {
             ScrollRect scrollview = swapComponent<ScrollRect>(mainObj);
+            RectTransform viewRectTrans = scrollview.GetComponent<RectTransform>();
+            RectTransform bgRectTrans = findChildComponent<RectTransform>(mainObj, "background");
+            viewRectTrans.anchoredPosition3D = bgRectTrans.anchoredPosition3D;
+            viewRectTrans.sizeDelta = bgRectTrans.sizeDelta;
+
+            offsetAnchorPosition(viewRectTrans, bgRectTrans.anchoredPosition3D);
+            
 
             GameObject viewportGObj = CreateUIObject("viewport", mainObj);
             // Make viewport fill entire scroll view.
@@ -189,10 +198,19 @@ namespace subjectnerdagreement.psdexport
             viewportRT.sizeDelta = Vector2.zero;
             viewportRT.pivot = Vector2.up;
 
+            Mask viewportMask = viewportGObj.AddComponent<Mask>();
+            viewportMask.showMaskGraphic = false;
+
+            Image viewportImage = viewportGObj.AddComponent<Image>();
+            viewportImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UIMask.psd"); 
+            viewportImage.type = Image.Type.Sliced;
+
             GameObject contentGObj = CreateUIObject("content", viewportGObj);
             // Make context match viewpoprt width and be somewhat taller.
             // This will show the vertical scrollbar and not the horizontal one.
             RectTransform contentRT = contentGObj.GetComponent<RectTransform>();
+            ContentSizeFitter sizeFitter = contentGObj.AddComponent<ContentSizeFitter>();
+
             contentRT.anchorMin = Vector2.up;
             contentRT.anchorMax = Vector2.one;
             contentRT.sizeDelta = new Vector2(0, 300);
@@ -206,6 +224,7 @@ namespace subjectnerdagreement.psdexport
             {
                 scrollview.horizontalScrollbar = hbar;
                 scrollview.horizontal = true;
+                sizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             }
 
             Scrollbar vbar = findChildComponent<Scrollbar>(mainObj, "vbar");
@@ -213,6 +232,15 @@ namespace subjectnerdagreement.psdexport
             {
                 scrollview.verticalScrollbar = hbar;
                 scrollview.vertical = true;
+                sizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            }
+
+            RectTransform cell = findChildComponent<RectTransform>(mainObj, "cell");
+            if (cell)
+            {
+                Vector3 minPosition = findMinPosition(cell, Vector3.one*float.MaxValue, hbar);
+                cell.anchoredPosition3D = minPosition;
+                offsetAnchorPosition(cell , minPosition);
             }
         }
 
@@ -317,6 +345,34 @@ namespace subjectnerdagreement.psdexport
             }
         }
 
+        private static void offsetAnchorPosition(RectTransform rootTrans , Vector3 offset)
+        {
+            foreach (RectTransform childTrans in rootTrans)
+            {
+                if (childTrans.childCount > 0)
+                    offsetAnchorPosition(childTrans , offset);
+                childTrans.anchoredPosition3D -= offset;
+            }
+        }
+
+        private static Vector3 findMinPosition(RectTransform rootTrans , Vector3 minPosition , bool isY)
+        {
+            foreach (RectTransform childTrans in rootTrans)
+            {
+                if (isY)
+                {
+                    if (childTrans.anchoredPosition3D.y < minPosition.y)
+                        minPosition = childTrans.anchoredPosition3D;
+                }
+                else
+                {
+                    if (childTrans.anchoredPosition3D.x < minPosition.x)
+                        minPosition = childTrans.anchoredPosition3D;
+                }
+            }
+
+            return minPosition;
+        }
     }
 
 

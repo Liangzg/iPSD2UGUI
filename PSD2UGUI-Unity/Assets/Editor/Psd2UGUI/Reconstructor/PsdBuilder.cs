@@ -44,8 +44,7 @@ namespace subjectnerdagreement.psdexport
 
 			// Store the last parent, for traversal
 			GameObject lastParent = root;
-
-			GameObject rootBase = null;
+			GameObject rootBase = root;
 
 			int groupVisibleMask = 1;
 			int groupDepth = 0;
@@ -153,20 +152,12 @@ namespace subjectnerdagreement.psdexport
 					text.horizontalOverflow = HorizontalWrapMode.Overflow;
 					text.verticalOverflow = VerticalWrapMode.Overflow;
 
-					text.fontSize = (int)layerText.FontSize;
+                    text.font = AssetDatabase.LoadAssetAtPath<Font>(PsdSetting.Instance.DefaultFontPath);
+				    text.fontStyle = GetFontStyle(layerText);
+                    text.fontSize = (int)layerText.FontSize;
 					text.rectTransform.SetAsFirstSibling();
 					text.rectTransform.sizeDelta = new Vector2(layer.Rect.width, layer.Rect.height);
 					text.text = layerText.Text.Replace("\r\n", "\n").Replace("\r", "\n");
-
-					FontStyle fontStyle = FontStyle.Normal;
-					if (layerText.FauxBold)
-					{
-						fontStyle |= FontStyle.Bold;
-					}
-					if (layerText.FauxItalic)
-					{
-						fontStyle |= FontStyle.Italic;
-					}
 
 					float a = ((layerText.FillColor & 0xFF000000U) >> 24) / 255f;
 					float r = ((layerText.FillColor & 0xFF0000U) >> 16) / 255f;
@@ -239,20 +230,18 @@ namespace subjectnerdagreement.psdexport
             }
         }
 
-	    public static void BuildPsd(GameObject root, PSDLayerGroupInfo[] group,
-	        PsdExportSettings settings, PsdFileInfo fileInfo,
+	    public static GameObject BuildPsdRoot(GameObject root, PsdExportSettings settings, PsdFileInfo fileInfo,
 	        SpriteAlignment align, IPsdConstructor constructor)
 	    {
             GameObject spriteObject = constructor.CreateGameObject(settings.Filename, root);
 
-            for (int i = 0; i < group.Length; i++)
-//	        for (int i = group.Length - 1; i >= 0; i--)
-	        {
-                if (group[i].depth > 1) continue;
+            PSDLayerGroupInfo rootGroup = new PSDLayerGroupInfo(settings.Filename, settings.Psd.Layers.Count - 1, true, true);
+            rootGroup.start = 0;
+            
+            BuildPsd(spriteObject, rootGroup, settings, fileInfo, align, constructor);
 
-	            BuildPsd(spriteObject, group[i] , settings , fileInfo , align , constructor);
-	        }
-	    }
+            return spriteObject;
+        }
 
         private static void HandleGroupObject(PSDLayerGroupInfo groupInfo,
 									Dictionary<PSDLayerGroupInfo, GameObject> groupHeaders,
@@ -333,6 +322,17 @@ namespace subjectnerdagreement.psdexport
 				return sprSettings.spritePivot;
 			return GetPivot(align);
 		}
+
+
+	    public static FontStyle GetFontStyle(LayerText layerText)
+	    {
+	        FontStyle style = FontStyle.Normal;
+            if(layerText.FauxBold)
+                style |= FontStyle.Bold;
+            if(layerText.FauxItalic)
+                style |= FontStyle.Italic;
+            return style;
+	    }
 		#endregion
 	}
 }
