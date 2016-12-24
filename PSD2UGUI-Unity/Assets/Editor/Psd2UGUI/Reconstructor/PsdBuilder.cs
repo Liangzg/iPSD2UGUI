@@ -152,7 +152,8 @@ namespace subjectnerdagreement.psdexport
 					text.horizontalOverflow = HorizontalWrapMode.Overflow;
 					text.verticalOverflow = VerticalWrapMode.Overflow;
 
-                    text.font = AssetDatabase.LoadAssetAtPath<Font>(PsdSetting.Instance.DefaultFontPath);
+                    if(!string.IsNullOrEmpty(PsdSetting.Instance.DefaultFontPath))
+                        text.font = AssetDatabase.LoadAssetAtPath<Font>(PsdSetting.Instance.DefaultFontPath);
 				    text.fontStyle = GetFontStyle(layerText);
                     text.fontSize = (int)layerText.FontSize;
 					text.rectTransform.SetAsFirstSibling();
@@ -219,15 +220,17 @@ namespace subjectnerdagreement.psdexport
 
 	    private static void parseComponent(GameObject root)
 	    {
-	        WordParser.BindingParse(root);
+	        string layerName = root.name;
+	        List<Word> parseWords = WordParser.BindingParse(root , layerName);
 
-            foreach (Transform childTrans in root.transform)
-            {
-                if(childTrans.childCount > 0)
-                    parseComponent(childTrans.gameObject);
-                else
-                    WordParser.BindingParse(childTrans.gameObject);
+	        int childCount = root.transform.childCount;
+	        for (int i = childCount - 1; i >= 0; i--)
+	        {
+	            Transform childTrans = root.transform.GetChild(i);
+                parseComponent(childTrans.gameObject);
             }
+
+            WordParser.exitBindingParse(parseWords , root , layerName);
         }
 
 	    public static GameObject BuildPsdRoot(GameObject root, PsdExportSettings settings, PsdFileInfo fileInfo,

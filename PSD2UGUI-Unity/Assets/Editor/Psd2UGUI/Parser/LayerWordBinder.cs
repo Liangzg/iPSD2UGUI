@@ -16,7 +16,7 @@ namespace subjectnerdagreement.psdexport
     /// </summary>
     public class LayerWordBinder
     {
-        private static Dictionary<string , Action<string , GameObject>> importParser = new Dictionary<string, Action<string, GameObject>>();
+        private static Dictionary<string , IBinding> importParser = new Dictionary<string, IBinding>();
 
         static LayerWordBinder()
         {
@@ -25,246 +25,22 @@ namespace subjectnerdagreement.psdexport
 
         public static void registWord()
         {
-            importParser["anchor"] = importAnchor;
-            importParser["name"] = importName;
-            importParser["img"] = importImageAsset;
+            // 参数绑定解析
+            importParser["name"] = new NameBinder();
+            importParser["img"] = new ImageBinder();
+            importParser["ignore"] = new IgnoreBinder();
 
-            registComponent();
-        }
-
-        private static void importImageAsset(string s, GameObject gameObject)
-        {
-            
-        }
-
-        private static void importName(string s, GameObject gameObject)
-        {
-            gameObject.name = s;
-        }
-
-        /// <summary>
-        /// 定义结点的对齐方式
-        /// </summary>
-        /// <param name="arg"></param>
-        private static void importAnchor(string arg, GameObject mainObj)
-        {
-//            throw new NotImplementedException();
-        }
-
-        public static void registComponent()
-        {
-            importParser["button"] = importButtonComponent;
-            importParser["toggle"] = importToggleButton;
-            importParser["slider"] = importSlider;
-            importParser["scrollview"] = importScrollView;
-            importParser["scrollbar"] = importScrollBar;
-            importParser["inputfield"] = importInputField;
-        }
-
-        private static void importInputField(string s, GameObject mainObj)
-        {
-            Transform bgTrans = findChildComponent<Transform>(mainObj, "background");
-            copyRectTransform(bgTrans.gameObject, mainObj, true);
-
-            Text holderText = findChildComponent<Text>(mainObj, "holder");
-            if (holderText) {
-                RectTransform holderTrans = holderText.GetComponent<RectTransform>();
-                holderTrans.anchorMin = Vector2.zero;
-                holderTrans.anchorMax = Vector2.one;
-                holderTrans.sizeDelta = Vector2.zero;
-                holderTrans.offsetMin = new Vector2(10, 6);
-                holderTrans.offsetMax = new Vector2(-10, -7);
-            }
-
-            GameObject textObj = CreateUIObject("text" , mainObj);
-            Text text = textObj.AddComponent<Text>();
-            text.text = "";
-            text.supportRichText = false;
-            if (holderText)
-            {
-                text.alignment = holderText.alignment;
-                text.fontSize = holderText.fontSize - 1;
-                text.font = holderText.font;
-            }
-
-            RectTransform textRectTransform = textObj.GetComponent<RectTransform>();
-            textRectTransform.anchorMin = Vector2.zero;
-            textRectTransform.anchorMax = Vector2.one;
-            textRectTransform.sizeDelta = Vector2.zero;
-            textRectTransform.offsetMin = new Vector2(10, 6);
-            textRectTransform.offsetMax = new Vector2(-10, -7);
-
-            InputField inputField = swapComponent<InputField>(mainObj);
-            inputField.textComponent = text;
-            inputField.placeholder = holderText;
-        }
-
-        private static void importScrollBar(string s, GameObject mainObj)
-        {
-            Image oldImg = findChildComponent<Image>(mainObj, "background");
-            copyRectTransform(oldImg.gameObject, mainObj , true);
-
-            GameObject sliderArea = CreateUIObject("Sliding Area" , mainObj);
-            RectTransform sliderAreaRect = sliderArea.GetComponent<RectTransform>();
-            sliderAreaRect.sizeDelta = new Vector2(-20, -20);
-            sliderAreaRect.anchorMin = Vector2.zero;
-            sliderAreaRect.anchorMax = Vector2.one;
-
-            RectTransform handleRect = findChildComponent<RectTransform>(mainObj, "handle");
-            handleRect.transform.SetParent(sliderArea.transform);
-            handleRect.sizeDelta = new Vector2(20, 20);
-            handleRect.anchoredPosition = Vector2.zero;
-
-            Scrollbar scrollbar = swapComponent<Scrollbar>(mainObj);
-            scrollbar.handleRect = handleRect;
-            scrollbar.targetGraphic = handleRect.GetComponent<Image>();
-        }
-
-        private static void importSlider(string s, GameObject mainObj)
-        {
-            Slider slider = swapComponent<Slider>(mainObj);
-
-            Image imgBg = findChildComponent<Image>(mainObj, "background");
-            imgBg.type = Image.Type.Sliced;
-            slider.targetGraphic = imgBg;
-
-            RectTransform sliderBgTrans = slider.targetGraphic.GetComponent<RectTransform>();
-            RectTransform mainRectTrans = mainObj.GetComponent<RectTransform>();
-            mainRectTrans.sizeDelta = sliderBgTrans.sizeDelta;
-            mainRectTrans.anchoredPosition3D = sliderBgTrans.anchoredPosition3D;
-
-            sliderBgTrans.anchorMin = new Vector2(0, 0.25f);
-            sliderBgTrans.anchorMax = new Vector2(1, 0.75f);
-            sliderBgTrans.sizeDelta = Vector2.zero;
-            sliderBgTrans.anchoredPosition3D = Vector3.zero;
-
-            slider.fillRect = findChildComponent<RectTransform>(mainObj, "fill");
-            if (slider.fillRect)
-            {
-                GameObject fillRoot = CreateUIObject("fillArea" , mainObj);
-                fillRoot.transform.localScale = Vector3.one;
-                fillRoot.transform.localPosition = Vector3.zero;
-                RectTransform rectTrans = fillRoot.GetComponent<RectTransform>();
-                rectTrans.anchorMin = new Vector2(0 , 0.25f);
-                rectTrans.anchorMax = new Vector2(1 , 0.75f);
-                rectTrans.pivot = Vector2.one * 0.5f;
-                rectTrans.sizeDelta = new Vector2(-20, 0);
-
-                slider.fillRect.transform.SetParent(fillRoot.transform);
-                slider.fillRect.anchoredPosition = Vector3.zero;
-                Image fillImage = slider.fillRect.GetComponent<Image>();
-                fillImage.type = Image.Type.Sliced;
-
-                slider.fillRect.anchorMax = new Vector2(0 , 1);
-                slider.fillRect.sizeDelta = new Vector2(10, 0);
-            }
-
-            slider.handleRect = findChildComponent<RectTransform>(mainObj, "handle");
-            if (slider.handleRect)
-            {
-                GameObject handleArea = CreateUIObject("HandleSlideArea" , mainObj);
-                handleArea.transform.localScale = Vector3.one;
-                handleArea.transform.localPosition = Vector3.zero;
-
-                RectTransform rectTrans = handleArea.GetComponent<RectTransform>();
-                rectTrans.anchorMin = Vector2.zero;
-                rectTrans.anchorMax = Vector2.one;
-                rectTrans.pivot = Vector2.one * 0.5f;
-                rectTrans.sizeDelta = new Vector2(-20, 0);
-
-                slider.handleRect.transform.SetParent(handleArea.transform);
-                slider.handleRect.anchoredPosition = Vector3.zero;
-                slider.handleRect.anchorMax = new Vector2(0, 1);
-                slider.handleRect.sizeDelta = new Vector2(20 , 0);
-            }
-        }
-
-        private static void importScrollView(string s, GameObject mainObj)
-        {
-            ScrollRect scrollview = swapComponent<ScrollRect>(mainObj);
-            RectTransform viewRectTrans = scrollview.GetComponent<RectTransform>();
-            RectTransform bgRectTrans = findChildComponent<RectTransform>(mainObj, "background");
-            viewRectTrans.anchoredPosition3D = bgRectTrans.anchoredPosition3D;
-            viewRectTrans.sizeDelta = bgRectTrans.sizeDelta;
-
-            offsetAnchorPosition(viewRectTrans, bgRectTrans.anchoredPosition3D);
-            
-
-            GameObject viewportGObj = CreateUIObject("viewport", mainObj);
-            // Make viewport fill entire scroll view.
-            RectTransform viewportRT = viewportGObj.GetComponent<RectTransform>();
-            viewportRT.anchorMin = Vector2.zero;
-            viewportRT.anchorMax = Vector2.one;
-            viewportRT.sizeDelta = Vector2.zero;
-            viewportRT.pivot = Vector2.up;
-
-            Mask viewportMask = viewportGObj.AddComponent<Mask>();
-            viewportMask.showMaskGraphic = false;
-
-            Image viewportImage = viewportGObj.AddComponent<Image>();
-            viewportImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UIMask.psd"); 
-            viewportImage.type = Image.Type.Sliced;
-
-            GameObject contentGObj = CreateUIObject("content", viewportGObj);
-            // Make context match viewpoprt width and be somewhat taller.
-            // This will show the vertical scrollbar and not the horizontal one.
-            RectTransform contentRT = contentGObj.GetComponent<RectTransform>();
-            ContentSizeFitter sizeFitter = contentGObj.AddComponent<ContentSizeFitter>();
-
-            contentRT.anchorMin = Vector2.up;
-            contentRT.anchorMax = Vector2.one;
-            contentRT.sizeDelta = new Vector2(0, 300);
-            contentRT.pivot = Vector2.up;
-
-            scrollview.viewport = viewportRT;
-            scrollview.content = contentRT;
-
-            Scrollbar hbar = findChildComponent<Scrollbar>(mainObj, "hbar");
-            if (hbar != null)
-            {
-                scrollview.horizontalScrollbar = hbar;
-                scrollview.horizontal = true;
-                sizeFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            }
-
-            Scrollbar vbar = findChildComponent<Scrollbar>(mainObj, "vbar");
-            if (vbar != null)
-            {
-                scrollview.verticalScrollbar = hbar;
-                scrollview.vertical = true;
-                sizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            }
-
-            RectTransform cell = findChildComponent<RectTransform>(mainObj, "cell");
-            if (cell)
-            {
-                Vector3 minPosition = findMinPosition(cell, Vector3.one*float.MaxValue, hbar);
-                cell.anchoredPosition3D = minPosition;
-                offsetAnchorPosition(cell , minPosition);
-            }
-        }
-
-        private static void importToggleButton(string s, GameObject mainObj)
-        {
-            Toggle toggle = swapComponent<Toggle>(mainObj);
-            
-            Image imgBtn = findChildComponent<Image>(mainObj, "background");
-            toggle.image = imgBtn;
-
-            Image imgMark = findChildComponent<Image>(mainObj, "checkmark");
-            toggle.graphic = imgMark;
-            toggle.isOn = true;
-        }
-
-        private static void importButtonComponent(string s, GameObject mainObj)
-        {
-            Button button = swapComponent<Button>(mainObj);
-            Image imgBtn = findChildComponent<Image>(mainObj, "imgBtn");
-            button.targetGraphic = imgBtn;
+            // 脚本组件
+            importParser["button"] = new ButtonBinder();
+            importParser["toggle"] = new ToggleBinder();
+            importParser["slider"] = new SliderBinder();
+            importParser["scrollview"] = new ScrollViewBinder();
+            importParser["scrollbar"] = new ScrollbarBinder();
+            importParser["inputfield"] = new InputFieldBinder();
         }
 
 
-        public static Action<string, GameObject> GetParser(string key)
+        public static IBinding GetParser(string key)
         {
             if (importParser.ContainsKey(key)) return importParser[key];
             return null;
@@ -298,7 +74,7 @@ namespace subjectnerdagreement.psdexport
             return destTrans.GetComponent<T>();
         }
 
-        static GameObject CreateUIObject(string name, GameObject parent)
+        public static GameObject CreateUIObject(string name, GameObject parent)
         {
             GameObject go = new GameObject(name);
             go.AddComponent<RectTransform>();
@@ -322,7 +98,7 @@ namespace subjectnerdagreement.psdexport
                 SetLayerRecursively(t.GetChild(i).gameObject, layer);
         }
 
-        private static void copyRectTransform(GameObject src, GameObject dest , bool copyImage = false)
+        public static void copyRectTransform(GameObject src, GameObject dest , bool copyImage = false)
         {
             RectTransform srt = src.GetComponent<RectTransform>();
             RectTransform drt = dest.GetComponent<RectTransform>();
@@ -345,7 +121,7 @@ namespace subjectnerdagreement.psdexport
             }
         }
 
-        private static void offsetAnchorPosition(RectTransform rootTrans , Vector3 offset)
+        public static void offsetAnchorPosition(RectTransform rootTrans , Vector3 offset)
         {
             foreach (RectTransform childTrans in rootTrans)
             {
@@ -355,7 +131,7 @@ namespace subjectnerdagreement.psdexport
             }
         }
 
-        private static Vector3 findMinPosition(RectTransform rootTrans , Vector3 minPosition , bool isY)
+        public static Vector3 findMinPosition(RectTransform rootTrans , Vector3 minPosition , bool isY)
         {
             foreach (RectTransform childTrans in rootTrans)
             {

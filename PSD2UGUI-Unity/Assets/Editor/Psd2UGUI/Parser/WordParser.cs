@@ -37,22 +37,20 @@ namespace subjectnerdagreement.psdexport
         /// 解析
         /// </summary>
         /// <param name="context"></param>
-        public static void BindingParse(GameObject context)
+        public static List<Word> BindingParse(GameObject context, string layerName)
         {
             List<Word> words = ParseLayerName(context.name);
             string newName = getGameObjectName(words);
             if(!string.IsNullOrEmpty(newName))
                 context.name = newName;
+
+            IBinding import = null;
             //解析绑定组件和参数
             foreach (Word word in words)
             {
                 if(word.TypeAndParams == null)  continue;
-
-                
                 foreach (string key in word.TypeAndParams.Keys)
                 {
-                    Action<string, GameObject> import = null;
-
                     if (key != "component")
                         import = LayerWordBinder.GetParser(key);
                     else
@@ -64,10 +62,32 @@ namespace subjectnerdagreement.psdexport
                         continue;
                     }
 
-                    import.Invoke(word.TypeAndParams[key] , context);
+                    import.StartBinding(context , word.TypeAndParams[key] , layerName);
                 }
             }
-            
+
+            return words;
+        }
+
+
+        public static void exitBindingParse(List<Word> words , GameObject context , string layerName)
+        {
+            IBinding import = null;
+            foreach (Word word in words)
+            {
+                if (word.TypeAndParams == null) continue;
+                foreach (string key in word.TypeAndParams.Keys)
+                {
+                    if (key != "component")
+                        import = LayerWordBinder.GetParser(key);
+                    else
+                        import = LayerWordBinder.GetParser(word.TypeAndParams[key]);
+
+                    if (import == null) continue;
+
+                    import.ExitBinding(context, word.TypeAndParams[key], layerName);
+                }
+            }
         }
 
 
